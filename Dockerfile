@@ -8,6 +8,9 @@ COPY requirements.txt .
 # add app-directory
 COPY ./app ./app
 
+# add data-directory
+COPY ./data ./data
+
 # install dependencies
 RUN pip install -r requirements.txt
 

@@ -12,7 +12,7 @@ TOKEN_LOCATION = "app/credentials/token.json"
 CREDENTIALS_LOCATION = "app/credentials/credentials.json"
 
 
-def main():
+def getEventsOfToday() -> list((str, str)):
  
     creds = Credentials.from_authorized_user_file(TOKEN_LOCATION, SCOPES)
     if not creds or not creds.valid:
@@ -31,14 +31,14 @@ def main():
         service = build("calendar", "v3", credentials=creds)
 
         # Call the Calendar API
-        now = datetime.datetime.now().isoformat() + "Z"  # 'Z' indicates UTC time
-        print("Getting the upcoming 10 events")
+        now = (datetime.date.today() + datetime.timedelta(days=0)).isoformat() + "T00:00:00.0" + "Z"  # 'Z' indicates UTC time
+        tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).isoformat() + "T00:00:00.0" + "Z"
         events_result = (
             service.events()
             .list(
                 calendarId="primary",
                 timeMin=now,
-                maxResults=3,
+                timeMax=tomorrow,
                 singleEvents=True,
                 orderBy="startTime",
             )
@@ -47,17 +47,17 @@ def main():
         events = events_result.get("items", [])
 
         if not events:
-            print("No upcoming events found.")
-            return
+            return []
 
-        # Prints the start and name of the next 10 events
+        events_of_today = []
         for event in events:
             start = event["start"].get("dateTime", event["start"].get("date"))
-            print(start, event["summary"])
+            events_of_today.append((start, event["summary"]))
+        return events_of_today
 
     except HttpError as error:
-        print(f"An error occurred: {error}")
+        return [("error", "HTTP-error:" + error)]
 
 
 if __name__ == "__main__":
-    main()
+    print(getEventsOfToday())
